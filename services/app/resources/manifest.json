@@ -1,0 +1,38 @@
+{
+    "app_name": "GCP Metadata Exchange App",
+    "description": "GCP metadata exchange app to synchronize BigID to the GCP ecosystem",
+    "category": "utility",
+    "license_type": "PAID",
+    "vendor": "BigID",
+    "version": "0.1.1",
+    "license_verification_key": "",
+    "global_params": [],
+    "actions": [
+        {
+            "action_id": "BigQuery column policy tagging from sensitivity classification",
+            "description": "Propagates BigID sensitivity classification group as taxonomy and apply column-level sensitivity data via BigID policy tags, allowing BigQuery dynamic data masking",
+            "is_sync": true,
+            "action_params": [
+                {
+                    "param_name": "Sensitivity group name",
+                    "param_type": "String",
+                    "is_cleartext": true,
+                    "param_description": "Sensitivity classification group that will be propagated as a BigQuery policy tag taxonomy.",
+                    "default_value": "Sensitivity",
+                    "param_priority": "primary",
+                    "is_mandatory": true
+                },
+                {
+                    "param_name": "Project filter CSV list",
+                    "param_type": "String",
+                    "is_cleartext": true,
+                    "param_description": "Comma separated list of projects in scope for the sync. Leave it blank to sync all BQ",
+                    "default_value": "",
+                    "param_priority": "primary",
+                    "is_mandatory": false
+                }
+            ]
+        }
+    ]
+}
+      

@@ -1,19 +1,4 @@
-# Quickstart Simple Utility App - TypeScript
-
-A BigID Utility App project template written in [TypeScript](https://www.typescriptlang.org/), meant to serve as a starting point for simple scripting apps.
-
-The sections below describe how to debug the solution, how to build it to run in a Docker container (both locally and remote), how to load the app into an instance of BigID, and what actions are provided in this starter app.
-
-Once cloned, this solution can be used as the starting point for your own BigID Utility App by editing the existing actions or adding new ones.
-
-- [Quickstart Simple Utility App - TypeScript](#quickstart-simple-utility-app---typescript)
-  - [How to debug](#how-to-debug)
-  - [How to build for running in Docker](#how-to-build-for-running-in-docker)
-    - [Building for local Docker instance](#building-for-local-docker-instance)
-    - [Building and packaging for remote Docker instance](#building-and-packaging-for-remote-docker-instance)
-  - [How to deploy to a BigID instance](#how-to-deploy-to-a-bigid-instance)
-    - [Deploy the app](#deploy-the-app)
-    - [Load the app into BigID](#load-the-app-into-bigid)
+# GCP MDE app 
 
 ## How to debug
 

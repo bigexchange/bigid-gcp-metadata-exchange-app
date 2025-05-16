@@ -4,7 +4,7 @@ import {
   ExecutionProvider,
   StatusEnum,
 } from '@bigid/apps-infrastructure-node-js';
-import { executeTestAction } from '../utils/actions';
+import { executeGCPPolicyTagsAction } from '../utils/actions';
 import { Response } from "express";
 
 import { getLogger } from "log4js";
@@ -18,8 +18,9 @@ export class ExecutionController extends ExecutionProvider {
     try {
       switch (action) {
 
-        case ("Test Action"):
-          executeTestAction(executionContext);
+        case ("BigQuery column policy tagging from sensitivity classification"):
+          console.log("entering action");
+          executeGCPPolicyTagsAction(executionContext);
           this.generateSyncSuccessMessage(res, executionId, "Did nothing successfully!");
           break;
 
