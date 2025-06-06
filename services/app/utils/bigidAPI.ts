@@ -1,7 +1,7 @@
 import { executeHttpGet, ExecutionContext } from "@bigid/apps-infrastructure-node-js";
 import {AxiosResponse} from 'axios';
 import { URLSearchParams } from "url";
-import { BigQueryConnection, SensitivityClassification } from "../dto/bigID";
+import { BigIDcolumnData, BigQueryConnection, SensitivityClassification, sensitivityTagPrefix } from "../dto/bigID";
 import { executeHttpPost } from "@bigid/apps-infrastructure-node-js/lib/services";
 
 
@@ -30,7 +30,6 @@ export async function getSentivityClassifications(ctx: ExecutionContext, sensiti
             throw new Error(`Did not find sensitivity classification "${sensitivityGroupName}"`);
         }
         if( !(dataKey in data)) {
-            console.log(data);
             throw new Error(`API incomaptibility on endpoint response ${endpointName}`);
         }
 
@@ -45,12 +44,28 @@ export async function getSentivityClassifications(ctx: ExecutionContext, sensiti
         }
     }
     else {
-        console.log(sensitivityList.data);
         throw new Error(`Failed to fetch list of classification groups with filter on name "${sensitivityGroupName}"`);
     }
     return results;
 }
 
+export async function getTagsForSensitivityClassification(ctx: ExecutionContext, sensitivityGroupName:string, tagCache: Map<string,string>){
+    const endpoint = 'data-catalog/tags/all-pairs';
+
+    const params = new URLSearchParams();
+    const tagName = sensitivityTagPrefix+ sensitivityGroupName;
+    params.append('search', tagName);
+    const url = endpoint + '?' + params;
+    const results:AxiosResponse = await executeHttpGet(ctx,url);
+    if (results.status === 200) {
+         for(const item of results.data.data) {
+            if(item.tagName === tagName) {
+                tagCache.set(item.tagId, item.tagName); // tagId will be set multiple times, we should probably assert it's always the same id
+                tagCache.set(item.valueId, item.valueName);
+            }
+         }
+    }
+}
 
 export async function getBigQueryDSListPaginated(ctx: ExecutionContext, projectNameList: string[]): Promise<BigQueryConnection[]> {
     const response:BigQueryConnection[] = []
@@ -95,7 +110,6 @@ async function getBigQueryDSListPage(ctx: ExecutionContext, projectNameList: str
             ]
         }
     };
-    console.log(projectNameList);
     if(projectNameList.length > 0) {
         body.query.filter.push(
                 {
@@ -105,7 +119,7 @@ async function getBigQueryDSListPage(ctx: ExecutionContext, projectNameList: str
                 }
         )
     }
-    const dsList = await executeHttpPost(ctx,endpoint,body);
+    const dsList:AxiosResponse = await executeHttpPost(ctx,endpoint,body);
     if(dsList.status === 200) {
         const data = dsList.data.data;
         response.push(...data.ds_connections);
@@ -127,7 +141,6 @@ export async function getCatalogFQNEntries(ctx: ExecutionContext, ds_connections
     const catalogResponse:AxiosResponse = await executeHttpPost(ctx, endpoint, body);
     if(catalogResponse.status === 200 ) {
         const data = catalogResponse.data;
-        console.log(data);
         for (const entry of data.results){
             results.push(entry.fullyQualifiedName);
         }
@@ -138,7 +151,7 @@ export async function getCatalogFQNEntries(ctx: ExecutionContext, ds_connections
     return results;
 }
 
-export async function getColumnsFromFQN(ctx:ExecutionContext, fqn:string){
+export async function getColumnsFromFQN(ctx:ExecutionContext, fqn:string):Promise<BigIDcolumnData[]>{
     const endpoint = 'data-catalog/object-details/columns';
     const params = new URLSearchParams();
     params.append('limit','100');
@@ -148,10 +161,11 @@ export async function getColumnsFromFQN(ctx:ExecutionContext, fqn:string){
     const url = endpoint + '?' + params.toString();
     const columnResponse:AxiosResponse = await executeHttpGet(ctx, url);
     if (columnResponse.status === 200) {
-        console.log(columnResponse.data);
+        return columnResponse.data.data;
     }
     else {
         //let's skip it for now
     }
+    return [];
 
 }

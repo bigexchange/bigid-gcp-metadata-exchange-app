@@ -78,6 +78,7 @@ export interface BigIDParamValue {
      */
     paramValue: string;
 }
+export const sensitivityTagPrefix = 'system.sensitivityClassification.'
 
 interface Classification {
     name: string;
@@ -118,4 +119,23 @@ export interface BigQueryConnection {
     name: string;
     project_id: string;
     cloudIdentifier?:string;
+}
+
+export interface ColumnTag {
+    tagId: string,
+    valueId: string,
+    tagName: string,
+    tagValue: string,
+    properties?: {
+        applicationType?: string,
+        hidden?: boolean
+    }
+}
+
+export interface BigIDcolumnData {
+    column_name: string,
+    fieldType: string,
+    isPrimary: boolean,
+    attribute_list: any[],
+    tags: ColumnTag[],
 }

@@ -20,7 +20,7 @@ export class ExecutionController extends ExecutionProvider {
 
         case ("BigQuery column policy tagging from sensitivity classification"):
           console.log("entering action");
-          executeGCPPolicyTagsAction(executionContext);
+          await executeGCPPolicyTagsAction(executionContext);
           this.generateSyncSuccessMessage(res, executionId, "Did nothing successfully!");
           break;
 

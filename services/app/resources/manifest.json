@@ -23,6 +23,15 @@
                     "is_mandatory": true
                 },
                 {
+                    "param_name": "GCP Region",
+                    "param_type": "String",
+                    "is_cleartext": true,
+                    "param_description": "GCP Region that will get Policy tags. One region per configuration",
+                    "default_value": "us-east1",
+                    "param_priority": "primary",
+                    "is_mandatory": true
+                },
+                {
                     "param_name": "Project filter CSV list",
                     "param_type": "String",
                     "is_cleartext": true,
