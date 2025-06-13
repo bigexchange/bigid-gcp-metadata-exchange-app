@@ -1,15 +1,20 @@
+export interface SensitivityClassificationKeyValuePair {
+    key: string,
+    value: string
+}
+
 export interface BQColumnData {
     name: string,
-    sensitivity: string
+    sensitivity: SensitivityClassificationKeyValuePair[]
 }
 export interface BQTableData {
-    name: string,
+    tableName: string,
     columns: BQColumnData[]
 }
 
 export interface BQDatasetData {
-    name: string,
-    tables: Map<string, BQTableData[]>
+    datasetName: string,
+    tables: BQTableData[]
 }
 
 export type ProcessingBuffer = Map<string,BQDatasetData[]>;

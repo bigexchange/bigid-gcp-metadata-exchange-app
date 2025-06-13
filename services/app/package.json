@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@bigid/apps-infrastructure-node-js": "1.226.1",
+    "@google-cloud/bigquery": "^8.1.0",
     "@google-cloud/datacatalog": "^5.1.0",
     "ts-node": "10.9.2",
     "typescript": "5.8.3"

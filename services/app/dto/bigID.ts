@@ -80,7 +80,7 @@ export interface BigIDParamValue {
 }
 export const sensitivityTagPrefix = 'system.sensitivityClassification.'
 
-interface Classification {
+export interface Classification {
     name: string;
     priority: number;
     query: string;

@@ -1,5 +1,5 @@
 import { ExecutionContext } from "@bigid/apps-infrastructure-node-js";
-import { BigIDParamValue } from '../dto/bigID';
+import { BigIDParamValue } from '../dto/bigid';
 import { ProcessingBuffer } from "../dto/processing";
 
 export function getTrimmedStringParameter(executionContext: ExecutionContext, paramName: string): string {

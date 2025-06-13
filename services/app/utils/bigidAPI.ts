@@ -1,7 +1,7 @@
 import { executeHttpGet, ExecutionContext } from "@bigid/apps-infrastructure-node-js";
 import {AxiosResponse} from 'axios';
 import { URLSearchParams } from "url";
-import { BigIDcolumnData, BigQueryConnection, SensitivityClassification, sensitivityTagPrefix } from "../dto/bigID";
+import { BigIDcolumnData, BigQueryConnection, SensitivityClassification, sensitivityTagPrefix } from "../dto/bigid";
 import { executeHttpPost } from "@bigid/apps-infrastructure-node-js/lib/services";
 
 

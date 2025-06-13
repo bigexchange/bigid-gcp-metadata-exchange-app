@@ -1,9 +1,9 @@
 import { ExecutionContext } from "@bigid/apps-infrastructure-node-js";
 import { getBigQueryDSListPaginated, getCatalogFQNEntries, getColumnsFromFQN, getSentivityClassifications} from "./bigidAPI";
 import { findOrCreateInArray, getCommaSeparatedStringParameter, getOrCreateMapValue, getTrimmedStringParameter, prettyPrintProcessingBufferWithJSON } from "./utils";
-import { BigIDcolumnData, ColumnTag, SensitivityClassification, sensitivityTagPrefix } from "../dto/bigID";
-import { BQTableData, ProcessingBuffer } from "../dto/processing";
-import { createTaxonomyAndPopulateTags, PolicyTagDefinition } from "./gcpAPI";
+import { BigIDcolumnData, ColumnTag, SensitivityClassification, sensitivityTagPrefix } from "../dto/bigid";
+import { ProcessingBuffer } from "../dto/processing";
+import { applyGovernanceToProject} from "./gcpAPI";
 
 function getOnlySensitivityTags(columnEntry:BigIDcolumnData, sensitivityClassifications: SensitivityClassification[]): ColumnTag[] {
     const results: ColumnTag[] = [];
@@ -16,7 +16,7 @@ function getOnlySensitivityTags(columnEntry:BigIDcolumnData, sensitivityClassifi
     return results;
 }
 
-function saveToProcessingBuffer(buffer:ProcessingBuffer, dataSourceName:string, datasetName:string, tableName:string, columnName:string, sensitivity:string) {
+function saveToProcessingBuffer(buffer:ProcessingBuffer, dataSourceName:string, datasetName:string, tableName:string, columnName:string, sensitivityKey:string, sensitivityValue: string) {
 
     // Step 1: Get or create BQDatasetData array for the dataSourceName
     const datasetsForSource = getOrCreateMapValue(buffer, dataSourceName, () => []);
@@ -24,51 +24,34 @@ function saveToProcessingBuffer(buffer:ProcessingBuffer, dataSourceName:string, 
     // Step 2: Find or create BQDatasetData for the datasetName
     const targetDataset = findOrCreateInArray(
         datasetsForSource,
-        ds => ds.name === datasetName,
-        () => ({ name: datasetName, tables: new Map<string, BQTableData[]>() })
+        ds => ds.datasetName === datasetName,
+        () => ({ datasetName: datasetName, tables: [] })
     );
     
-    // Step 3: Get or create BQTableData array for the tableName (as map key)
-    const tablesArrayForKey = getOrCreateMapValue(targetDataset.tables, tableName, () => []);
-    
-    // Step 4: Find or create the specific BQTableData for the tableName (as object name)
+    // Step 3: Find or create the specific BQTableData for the tableName (as object name)
     const targetTable = findOrCreateInArray(
-        tablesArrayForKey,
-        t => t.name === tableName,
-        () => ({ name: tableName, columns: [] })
+        targetDataset.tables,
+        t => t.tableName === tableName,
+        () => ({ tableName: tableName, columns: [] })
     );
     
-    // Step 5: Find or create BQColumnData for the columnName
+    // Step 4: Find or create BQColumnData for the columnName
     const targetColumn = findOrCreateInArray(
         targetTable.columns,
         col => col.name === columnName,
-        () => ({ name: columnName, sensitivity: "" }) // Create with a temporary sensitivity
+        () => ({ name: columnName, sensitivity: [] }) // Create with a temporary sensitivity
     );
     
-    // Step 6: Update the sensitivity for the target column
-    targetColumn.sensitivity = sensitivity;
+    // Step 5: Update the sensitivity for the target column
+    targetColumn.sensitivity.push({ 'key': sensitivityKey, 'value': sensitivityValue});
 }
 
 async function processBuffer(ctx:ExecutionContext, gcpProject:string, buffer:ProcessingBuffer, sensitivityClassifications:SensitivityClassification[]) {
-    console.log(`processing ${gcpProject} hereee`);
     prettyPrintProcessingBufferWithJSON(buffer);
-
-    const region = getTrimmedStringParameter(ctx, "GCP Region");
-    for(const sensitivityClassification of sensitivityClassifications ){
-        const convertedGCPTags:PolicyTagDefinition[] = [];
-        for (const tag of sensitivityClassification.classifications) {
-            const gcpTagDefinition:PolicyTagDefinition = { displayName: tag.name };
-            convertedGCPTags.push(gcpTagDefinition);
-        }
-        console.log(`creating taxonomy ${sensitivityClassification.name} in ${gcpProject}`);
-        const results = await createTaxonomyAndPopulateTags(gcpProject,region, convertedGCPTags ,sensitivityClassification.name, sensitivityClassification.description )
-        console.log(results);
+    for(const [dsname, data] of buffer.entries()){
+        console.log(`tagging bigid datasource: ${dsname}`)
+        applyGovernanceToProject(gcpProject, data, sensitivityClassifications);
     }
-
-    // For each project
-    //Update or create BigID taxonomy in the current project
-    //For each FQN
-    //update_or_create policy tags
     //tag table in BigID as GCPmasked
 }
 
@@ -100,7 +83,7 @@ export async function executeGCPPolicyTagsAction(ctx: ExecutionContext) {
                         const [dataSourceName, bigQueryDataset, tableName] = fqn.split('.');
                         const ds = dsListPage.find(ds=> ds.name == dataSourceName);
                         if(ds !== undefined) {
-                            saveToProcessingBuffer(buffer, ds.name, bigQueryDataset, tableName, column.column_name, tags[0].tagValue);
+                            saveToProcessingBuffer(buffer, ds.name, bigQueryDataset, tableName, column.column_name, tags[0].tagName, tags[0].tagValue);
                         }
                         else {
                             throw new Error('Inconsistency in the catalog query')
@@ -108,7 +91,9 @@ export async function executeGCPPolicyTagsAction(ctx: ExecutionContext) {
                     }
                 }
             }
-            await processBuffer(ctx,project,buffer, sensitivityClassifications);
+            if(buffer.size) {
+              await processBuffer(ctx,project,buffer, sensitivityClassifications);
+            }
         }
 
     }
